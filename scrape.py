@@ -14,7 +14,7 @@ def get_soup(url):
     if not content:
         return False
 
-    soup = BeautifulSoup(content)
+    soup = BeautifulSoup(content, "html.parser")
     print 'Got soup of: ' + url
     return soup
 
