@@ -20,7 +20,7 @@ def get_soup(url):
 
 
 def find_book_url(title):
-    data = urllib.urlencode({'search-alias': 'stripbooks', 'field-title': title})
+    data = urllib.urlencode({'search-alias': 'stripbooks', 'field-keywords': title})
     search_page = get_soup(AMAZON_ADV_SEARCH_BASE_URL + '?' + data)
     result0=search_page.find(id='result_0')
     return result0.find('div', {'class': 'productTitle'}).find('a').attrs['href']
@@ -148,5 +148,6 @@ def process_url(url):
 
 
 title = 'Green eggs and ham'
+title = 'Mothers and Daughters: Women of the Intelligentsia in 19c Russia'
 url = find_book_url(title)
 reviews, num_each_rating = process_url(url)
