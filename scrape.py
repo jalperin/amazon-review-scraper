@@ -127,7 +127,7 @@ def process_url(url):
 
     reviews = pull_out_reviews(review_page)
 
-    while False and True:
+    while True:
         page_links = review_page.find('span', {'class': 'paging'})
         if page_links and page_links.find_all('a')[-1].text.startswith('Next'):
             review_url = page_links.find_all('a')[-1].attrs['href']
@@ -147,5 +147,6 @@ def process_url(url):
     return reviews, num_each_rating
 
 
-url = "http://www.amazon.com/gp/product/0385349947"
+title = 'Green eggs and ham'
+url = find_book_url(title)
 reviews, num_each_rating = process_url(url)
