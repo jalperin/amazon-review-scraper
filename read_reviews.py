@@ -9,22 +9,23 @@ import re
 import chardet
 from collections import defaultdict
 
-# <codecell>
+import ConfigParser
+Config = ConfigParser.ConfigParser()
+Config.read('jstor.cnf')
 
 con = None
 try:
-	# laptop
-	con = mdb.connect('localhost', 'root', '123456789', 'test');
+    con = mdb.connect('localhost', Config.get('database', 'username'), Config.get('database', 'password'), Config.get('database',
 
-	cur = con.cursor()
-	cur.execute("SELECT VERSION()")
+    cur = con.cursor()
+    cur.execute("SELECT VERSION()")
 
-	data = cur.fetchone()
-	print "Database version : %s " % data
+    data = cur.fetchone()
+    print "Database version : %s " % data
 
 except mdb.Error, e:
-	print "Error %d: %s" % (e.args[0],e.args[1])
-	sys.exit(1)
+    print "Error %d: %s" % (e.args[0],e.args[1])
+    sys.exit(1)
 
 cur = con.cursor()
 
@@ -106,13 +107,13 @@ for row in csvReader:
 
     review_id = 0
     try:
-        cur.execute("INSERT INTO reviews (doi, journal, volume, number, year, publication_date, title, author, num_reviewed_works, reviewed_works, reviewed_authors, language, disciplines, subjects, keywords, page_count, publisher) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);", (doi, journal, vol, num, year, pubdate, title, author, num_reviewed_works, '|'.join(rwi_titles), '|'.join(rwi_authors), language, disciplines, subjects, keywords, page_count, publisher))
+        cur.execute("INSERT INTO j_reviews (doi, journal, volume, number, year, publication_date, title, author, num_reviewed_works, reviewed_works, reviewed_authors, language, disciplines, subjects, keywords, page_count, publisher) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);", (doi, journal, vol, num, year, pubdate, title, author, num_reviewed_works, '|'.join(rwi_titles), '|'.join(rwi_authors), language, disciplines, subjects, keywords, page_count, publisher))
 
         review_id = cur.lastrowid
 
-        cur.executemany("INSERT INTO keywords (id, keyword) VALUES (%s, %s)", [(review_id, v) for v in keywords.split('|')])
-        cur.executemany("INSERT INTO disciplines (id, discipline) VALUES (%s, %s)", [(review_id, v) for v in keywords.split('|')])
-        cur.executemany("INSERT INTO subjects (id, subject) VALUES (%s, %s)", [(review_id, v) for v in keywords.split('|')])
+        cur.executemany("INSERT INTO j_keywords (j_review_id, keyword) VALUES (%s, %s)", [(review_id, v) for v in keywords.split('|')])
+        cur.executemany("INSERT INTO j_disciplines (j_review_id, discipline) VALUES (%s, %s)", [(review_id, v) for v in disciplines.split('|')])
+        cur.executemany("INSERT INTO j_subjects (j_review_id, subject) VALUES (%s, %s)", [(review_id, v) for v in subjects.split('|')])
 
         con.commit()
     except mdb.Error, e:
