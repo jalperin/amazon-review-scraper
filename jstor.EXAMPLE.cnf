@@ -1,0 +1,7 @@
+[database]
+username: xxx 
+password: xxx 
+database: jstor 
+
+[files]
+datadir: /some/data/dir/jstor/
