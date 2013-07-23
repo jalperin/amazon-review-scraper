@@ -32,7 +32,7 @@ def get_soup(url):
     return soup
 
 
-def find_book_url(title):
+def find_book_url(title, checkTitle = False):
     '''
     Search for the title using the keywords field (more tolerant than title field)
     and return the URL of the first result
@@ -43,22 +43,27 @@ def find_book_url(title):
     result0=search_page.find(id='result_0')
     try:
         a = result0.find('div', {'class': 'productTitle'}).find('a')
-        aTitle = str(a.text.strip())
+        aTitle = a.text.strip()
         url = a.attrs['href']
+    except KeyboardInterrupt:
+        raise KeyboardInterrupt
     except:
         raise Exception('NoResultsFound', title)
 
-    titleParts = re.split("[\:\(\!]+", title)
-    aTitleParts = re.split("[\:\(\!]+", aTitle)
+    if not checkTitle:
+        return (url, aTitle)
+
+    titleParts = re.split("[\:\(\!\,]+", title)
+    aTitleParts = re.split("[\:\(\!\,]+", aTitle)
 
     if difflib.SequenceMatcher(None, title, aTitle).ratio() > .85:
-        return url
+        return (url, aTitle)
     elif len(titleParts) > 1 and len(aTitleParts) > 1 and difflib.SequenceMatcher(None, titleParts[0].strip(), aTitleParts[0].strip()).ratio() > .85:
-        return url
+        return (url, aTitle)
     elif len(titleParts) > 1 and difflib.SequenceMatcher(None, titleParts[0].strip(), aTitle).ratio() > .85:
-        return url
+        return (url, aTitle)
     elif len(aTitleParts) > 1 and difflib.SequenceMatcher(None, titleParts, aTitleParts[0].strip()).ratio() > .85:
-        return url
+        return (url, aTitle)
     else:
         raise Exception('TitleNotFound', title)
 
