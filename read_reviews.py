@@ -6,7 +6,7 @@
 import MySQLdb as mdb
 import csv
 import re
-import chardet
+import chardet, django.utils.encoding
 from collections import defaultdict
 
 import ConfigParser
@@ -15,7 +15,7 @@ Config.read('jstor.cnf')
 
 con = None
 try:
-    con = mdb.connect('localhost', Config.get('database', 'username'), Config.get('database', 'password'), Config.get('database',
+    con = mdb.connect('localhost', Config.get('database', 'username'), Config.get('database', 'password'), Config.get('database', 'database'), charset='utf8',  use_unicode=True)
 
     cur = con.cursor()
     cur.execute("SELECT VERSION()")
@@ -35,18 +35,17 @@ def clean_string(s):
     if len(s) == 0:
         return s
     s = s.decode('string-escape')
+    return django.utils.encoding.smart_text(s)
     try:
-        dec = s.decode(chardet.detect(s)['encoding'])
+        dec = s.decode('utf8')
     except:
-        try:
-            dec = s.decode('utf8')
-        except:
-            dec = s
+        dec = s.decode(chardet.detect(s)['encoding'])
     return dec.encode('utf8')
 
 # <codecell>
 
-reviewFile = '/Users/juan/Code/git/amazon-review-scraper/reviews.csv'
+reviewFile = Config.get('files', 'datadir') + 'reviews.csv'
+# reviewFile = Config.get('files', 'datadir') + 'chartest.csv'
 f=open(reviewFile, 'rb')
 csvReader = csv.reader(f)
 csvReader.next()
@@ -98,13 +97,6 @@ for row in csvReader:
     page_count = row[13]
     publisher = row[14]
 
-    all_disciplines = all_disciplines.union(disciplines)
-    all_subjects = all_subjects.union(subjects)
-
-    if year not in year_counts:
-        year_counts[year] = 0
-    year_counts[year] += 1
-
     review_id = 0
     try:
         cur.execute("INSERT INTO j_reviews (doi, journal, volume, number, year, publication_date, title, author, num_reviewed_works, reviewed_works, reviewed_authors, language, disciplines, subjects, keywords, page_count, publisher) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);", (doi, journal, vol, num, year, pubdate, title, author, num_reviewed_works, '|'.join(rwi_titles), '|'.join(rwi_authors), language, disciplines, subjects, keywords, page_count, publisher))
@@ -115,15 +107,9 @@ for row in csvReader:
         cur.executemany("INSERT INTO j_disciplines (j_review_id, discipline) VALUES (%s, %s)", [(review_id, v) for v in disciplines.split('|')])
         cur.executemany("INSERT INTO j_subjects (j_review_id, subject) VALUES (%s, %s)", [(review_id, v) for v in subjects.split('|')])
 
-        con.commit()
     except mdb.Error, e:
-        con.revert()
         print "Error on review %d: %s" % (e.args[0],e.args[1])
         print "id %s" % i
-
-
-# if '' in all_disciplines: all_disciplines.remove('')
-# if '' in all_subjects: all_subjects.remove('')
 
 
 # close the DB conncetion
