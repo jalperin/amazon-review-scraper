@@ -1,4 +1,4 @@
-import os, sys, unidecode
+import os, sys
 import csv
 import re
 import shelve
@@ -49,7 +49,8 @@ cur.execute("""SELECT DISTINCT reviewed_works
                     AND num_reviewed_works = 1
                     AND reviewed_works != ''
                     AND reviewed_works IS NOT NULL
-                    AND year >= 2005""")
+                    AND year >= 2005
+		ORDER BY year DESC""")
 
 for i in range(cur.rowcount):
     row = cur.fetchone()
