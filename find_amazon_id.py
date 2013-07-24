@@ -73,7 +73,7 @@ for i in range(cur.rowcount):
     except KeyboardInterrupt:
         raise KeyboardInterrupt
     except:
-        print "Coult not find:  %s" % (title)
+        scur.execute("INSERT INTO title_id_map (title, amazon_id, amazon_title) VALUES (?, ?, ?)", (title, None, None))
         continue
 
     id_from_url_regex = re.compile('^.*/dp/([^/]+).*')
