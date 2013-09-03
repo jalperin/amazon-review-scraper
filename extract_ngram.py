@@ -70,9 +70,9 @@ for part in os.listdir(ngramDir):
         if doi in dois:
             dois_found.add(doi)
             if len(doi_amazon_id_map): # allow for not joining with the amazon id
-                o.write(doi_amazon_id_map[doi] + "\t" + line)
+                o.write(doi_amazon_id_map[doi] + "\t" + line.replace('"', ''))
             else:
-                o.write(line)
+                o.write(line.replace('"', ''))
     f.close()
 o.close()
 print 'Found %s DOIs' % len(dois_found)
