@@ -27,7 +27,10 @@ cur = con.cursor()
 try:
     discipline = sys.argv[1] + '-discipline'
     year = sys.argv[2]
-    cur.execute("SELECT DISTINCT r.doi FROM j_reviews r JOIN j_disciplines d ON (r.j_review_id = d.j_review_id) WHERE r.language = 'eng' AND r.num_reviewed_works = 1 AND r.reviewed_works != '' AND r.reviewed_works IS NOT NULL AND d.discipline = %s AND r.year = %s;", (discipline, int(year)))
+    # cur.execute("SELECT DISTINCT r.doi FROM j_reviews r JOIN j_disciplines d ON (r.j_review_id = d.j_review_id) WHERE r.language = 'eng' AND r.num_reviewed_works = 1 AND r.reviewed_works != '' AND r.reviewed_works IS NOT NULL AND d.discipline = %s AND r.year = %s;", (discipline, int(year)))
+
+    # joins with amazon data (only things in both)
+    cur.execute("SELECT DISTINCT r.doi, tim.amazon_id FROM j_reviews r JOIN j_disciplines d ON (r.j_review_id = d.j_review_id) JOIN title_id_map tim ON (r.reviewed_works_hash = tim.title_hash) JOIN a_reviews ar ON (tim.amazon_id = ar.amazon_id) WHERE r.language = 'eng' AND r.num_reviewed_works = 1 AND r.reviewed_works != '' AND r.reviewed_works IS NOT NULL AND d.discipline = %s AND r.year = %s;", (discipline, int(year)))
 
     rowcount = cur.rowcount
     if rowcount == 0:
@@ -47,9 +50,12 @@ ngramDir = dataDir + which_ngram + '/'
 outfile = "%sextracts/%s-%s-%s.txt" % (dataDir, discipline, year, which_ngram)
 
 dois = set([])
+doi_amazon_id_map = {}
 for i in range(rowcount):
     row = cur.fetchone()
     dois.add(row[0])
+    if len(row) > 1: # allow for not joining with the amazon id
+        doi_amazon_id_map[row[0]] = row[1]
 
 print "Looking for %s DOIs" % len(dois)
 
@@ -63,7 +69,10 @@ for part in os.listdir(ngramDir):
         doi = line[1:].split()[0]
         if doi in dois:
             dois_found.add(doi)
-	    o.write(line)
+            if len(doi_amazon_id_map): # allow for not joining with the amazon id
+                o.write(doi_amazon_id_map[doi] + "\t" + line)
+            else:
+                o.write(line)
     f.close()
 o.close()
 print 'Found %s DOIs' % len(dois_found)
